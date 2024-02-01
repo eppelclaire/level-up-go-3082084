@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"os"
+	"sort"
 )
 
 // User represents a user record.
@@ -17,7 +18,18 @@ const path = "users.json"
 // getBiggestMarket takes in the slice of users and
 // returns the biggest market.
 func getBiggestMarket(users []User) (string, int) {
-	panic("NOT IMPLEMENTED")
+	markets := make(map[string]int)
+	for _, user := range users {
+		markets[user.Country] += 1
+	}
+
+	keys := make([]string, 0, len(markets))
+	for k := range markets {
+		keys = append(keys, k)
+	}
+	sort.SliceStable(keys, func(i, j int) bool { return markets[keys[i]] > markets[keys[j]] })
+
+	return keys[0], markets[keys[0]]
 }
 
 func main() {
