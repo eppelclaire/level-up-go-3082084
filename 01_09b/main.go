@@ -1,6 +1,7 @@
 package main
 
 import (
+	"container/heap"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -15,11 +16,70 @@ type Song struct {
 	Name      string `json:"name"`
 	Album     string `json:"album"`
 	PlayCount int64  `json:"play_count"`
+
+	albumNum int
+	songNum  int
+}
+
+type PlaylistHeap []Song
+
+func (p PlaylistHeap) Len() int {
+	return len(p)
+}
+
+func (p PlaylistHeap) Less(i, j int) bool {
+	return p[i].PlayCount > p[j].PlayCount
+}
+
+func (p PlaylistHeap) Swap(i, j int) {
+	p[i], p[j] = p[j], p[i]
+}
+
+func (p *PlaylistHeap) Push(x any) {
+	*p = append(*p, x.(Song))
+}
+
+func (p *PlaylistHeap) Pop() any {
+	original := *p
+	n := len(original) - 1
+	songPopped := original[n]
+	*p = original[0:n]
+	return songPopped
 }
 
 // makePlaylist makes the merged sorted list of songs
 func makePlaylist(albums [][]Song) []Song {
-	panic("NOT IMPLEMENTED")
+	//var playlist []Song
+	//for _, album := range albums {
+	//	for _, song := range album {
+	//		playlist = append(playlist, song)
+	//	}
+	//}
+	//
+	//sort.SliceStable(playlist, func(i, j int) bool { return playlist[i].PlayCount > playlist[j].PlayCount })
+	//return playlist
+
+	playlistHeap := &PlaylistHeap{}
+	heap.Init(playlistHeap)
+	var playlist []Song
+	for i, album := range albums {
+		song := album[0]
+		song.albumNum = i
+		song.songNum = 0
+		heap.Push(playlistHeap, song)
+	}
+	for playlistHeap.Len() != 0 {
+		song := heap.Pop(playlistHeap).(Song)
+		playlist = append(playlist, song)
+		if song.songNum < len(albums[song.albumNum])-1 {
+			nextSong := albums[song.albumNum][song.songNum+1]
+			nextSong.songNum = song.songNum + 1
+			nextSong.albumNum = song.albumNum
+			heap.Push(playlistHeap, nextSong)
+		}
+	}
+
+	return playlist
 }
 
 func main() {

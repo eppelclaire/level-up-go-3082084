@@ -6,6 +6,7 @@ import (
 	"log"
 	"math/rand"
 	"os"
+	"slices"
 	"time"
 )
 
@@ -18,9 +19,12 @@ type Friend struct {
 	Friends []string `json:"friends"`
 }
 
+var alreadyHeardGossip []string
+
 // hearGossip indicates that the friend has heard the gossip.
 func (f *Friend) hearGossip() {
 	log.Printf("%s has heard the gossip!\n", f.Name)
+	alreadyHeardGossip = append(alreadyHeardGossip, f.ID)
 }
 
 // Friends represents the map of friends and connections
@@ -42,7 +46,16 @@ func (f *Friends) getRandomFriend() Friend {
 
 // spreadGossip ensures that all the friends in the map have heard the news
 func spreadGossip(root Friend, friends Friends) {
-	panic("NOT IMPLEMENTED")
+	for _, friendID := range root.Friends {
+		if len(alreadyHeardGossip) == len(friends.fmap) {
+			return
+		}
+		if !slices.Contains(alreadyHeardGossip, friendID) {
+			friend := friends.getFriend(friendID)
+			friend.hearGossip()
+			spreadGossip(friend, friends)
+		}
+	}
 }
 
 func main() {
